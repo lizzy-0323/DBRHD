@@ -6,12 +6,21 @@
 """
 import os
 import random
-
+import torch
+import torch.nn as nn
 import numpy as np
 from knn import KNN
-from net_naive import NET
+from cnn import CNN, DbrhdDataset
+from net import NET
 from sklearn.neural_network import MLPClassifier as DNN
 from sklearn.model_selection import train_test_split as TLS
+from torch.utils.data import DataLoader
+
+# config for cnn
+EPOCH = 5
+BATCH_SIZE = 64
+LR = 0.001
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def load_data(path="./data", train=True):
@@ -41,32 +50,64 @@ def load_data(path="./data", train=True):
     print("The path is not exist!")
 
 
-def run(method="knn"):
+def run(methods=None):
+    """
+    run the program
+    :param methods: the methods to recognize the handwritten digits
+    """
     train_data, train_labels = load_data("./data", train=True)
     test_data, test_labels = load_data("./data", train=False)
     acc = 0
-    if method == "knn":
-        knn = KNN(train_data, train_labels, k=3)
-        acc = knn.fit(test_data, test_labels, k=3)
-    elif method == "net":
-        train_data, valid_data, train_labels, valid_labels = TLS(
-            train_data, train_labels, test_size=0.2, random_state=420
-        )
-        dnn = DNN(hidden_layer_sizes=(100,), random_state=420).fit(
-            train_data, train_labels.ravel()
-        )
-        # 采用交叉验证
-        # print(dnn.score(valid_data, valid_labels))
-        acc = dnn.score(test_data, test_labels)
-    elif method == "net_naive":
-        pass
-    elif method == "cnn":
-        pass
-    else:
-        print("Method not found!")
-    print(f"Method: {method}, The accuracy is: {acc}")
+    if methods is None:
+        methods = ["knn", "net", "cnn"]
+    for method in methods:
+        if method == "knn":
+            knn = KNN(train_data, train_labels, k=3)
+            acc = knn.fit(test_data, test_labels, k=3)
+        elif method == "net":
+            train_data, valid_data, train_labels, valid_labels = TLS(
+                train_data, train_labels, test_size=0.2, random_state=420
+            )
+            dnn = DNN(hidden_layer_sizes=(100,), random_state=420).fit(
+                train_data, train_labels.ravel()
+            )
+            # 采用交叉验证
+            # print(dnn.score(valid_data, valid_labels))
+            acc = dnn.score(test_data, test_labels)
+        elif method == "net_naive":
+            net = NET(hidden_layer=100, random_state=420)
+        elif method == "cnn":
+            cnn = CNN()
+            train_data = DbrhdDataset(train_data, train_labels)
+            test_data = DbrhdDataset(test_data, test_labels)
+            train_loader = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True)
+            test_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=True)
+            # 初始化优化器
+            optimizer = torch.optim.Adam(cnn.parameters(), lr=LR)
+            # 初始化损失函数
+            loss_func = nn.CrossEntropyLoss()
+            epoches = EPOCH
+            for epoch in range(epoches):
+                cnn.train()
+                for step, data in enumerate(train_loader):
+                    x, y = data[0], data[1]
+                    x = x.to(device)
+                    y = y.squeeze().long().to(device)
+                    optimizer.zero_grad()
+                    outputs = cnn(x)
+                    loss = loss_func(outputs, y)
+                    loss.backward()
+                    optimizer.step()
+                    # 打印输出
+                    if step % 10 == 0:
+                        print(f"Epoch: {epoch}, Step: {step}, Loss: {loss}")
+            cnn.eval()
+            acc = cnn.fit(test_loader)
+
+        else:
+            print("Method not found!")
+        print(f"Method: {method}, The accuracy is: {acc}")
 
 
 if __name__ == "__main__":
-    for method in ["knn", "net"]:
-        run(method)
+    run()
