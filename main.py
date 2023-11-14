@@ -5,8 +5,6 @@
 @desc: using multiple method to recognize the handwritten digits
 """
 import os
-from re import S
-from regex import P
 import torch
 import torch.nn as nn
 import numpy as np

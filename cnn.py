@@ -1,3 +1,9 @@
+"""
+@author: laziyu
+@date: 2023/11/13
+@desc: using pytorch to build a CNN classifier
+"""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -11,6 +17,7 @@ class DbrhdDataset(Dataset):
     """
     User defined dataset for Dbrhd
     """
+
     def __init__(self, images, labels) -> None:
         super().__init__()
         self.images = torch.from_numpy(images).float().reshape(-1, 1, 32, 32)
@@ -29,6 +36,7 @@ class CNN(nn.Module):
     """
     CNN model
     """
+
     def __init__(self) -> None:
         super().__init__()
         # 第一个卷积层

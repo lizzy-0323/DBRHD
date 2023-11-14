@@ -1,3 +1,8 @@
+"""
+@author: laziyu
+@date: 2023/11/12
+@desc: using numpy to build a knn classifier    
+"""
 import numpy as np
 
 
