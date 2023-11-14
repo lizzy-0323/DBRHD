@@ -5,7 +5,8 @@
 @desc: using multiple method to recognize the handwritten digits
 """
 import os
-import random
+from re import S
+from regex import P
 import torch
 import torch.nn as nn
 import numpy as np
@@ -19,7 +20,7 @@ from torch.utils.data import DataLoader
 # config for cnn
 EPOCH = 5
 BATCH_SIZE = 64
-LR = 0.001
+LR = 0.01
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -68,14 +69,34 @@ def run(methods=None):
             train_data, valid_data, train_labels, valid_labels = TLS(
                 train_data, train_labels, test_size=0.2, random_state=420
             )
-            dnn = DNN(hidden_layer_sizes=(100,), random_state=420).fit(
+            dnn = DNN(hidden_layer_sizes=(500,), random_state=420).fit(
                 train_data, train_labels.ravel()
             )
             # 采用交叉验证
             # print(dnn.score(valid_data, valid_labels))
             acc = dnn.score(test_data, test_labels)
         elif method == "net_naive":
-            net = NET(hidden_layer=100, random_state=420)
+            epochs = EPOCH
+            batch_size = BATCH_SIZE
+            input_size = train_data.shape[1]
+            net = NET(input_size=input_size, hidden_size=500)
+            np.random.seed(420)
+            np.random.shuffle(train_data)
+            np.random.shuffle(train_labels)
+            for epoch in range(epochs):
+                # 按照batch_size进行训练
+                step = 0
+                for i in range(0, input_size, batch_size):
+                    x = train_data[i : i + batch_size]
+                    y = train_labels[i : i + batch_size]
+                    output = net(x)
+                    loss = net.loss(output, y)
+                    net.backward(x, y)
+                    net.update_grad()
+                    net.update_learning_rate()
+                    print(f"Epoch: {epoch}, Step: {step}, Loss: {loss}")
+                    step += 1
+            acc = net.fit(test_data, test_labels)
         elif method == "cnn":
             cnn = CNN()
             train_data = DbrhdDataset(train_data, train_labels)
@@ -86,8 +107,8 @@ def run(methods=None):
             optimizer = torch.optim.Adam(cnn.parameters(), lr=LR)
             # 初始化损失函数
             loss_func = nn.CrossEntropyLoss()
-            epoches = EPOCH
-            for epoch in range(epoches):
+            epochs = EPOCH
+            for epoch in range(epochs):
                 cnn.train()
                 for step, data in enumerate(train_loader):
                     x, y = data[0], data[1]
@@ -110,4 +131,4 @@ def run(methods=None):
 
 
 if __name__ == "__main__":
-    run()
+    run(["net_naive"])
