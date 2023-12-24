@@ -6,4 +6,8 @@ DBRHD dataset
 
 ## Method
 
+- CNN
+- KNN
+- Naive net
+
 ## Result

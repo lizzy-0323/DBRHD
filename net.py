@@ -36,7 +36,7 @@ def cross_entropy(y, y_hat):
     return -np.sum(y * np.log(y_hat + 1e-7)) / len(y)
 
 
-class NET(object):
+class NET:
     """numpy naive neural network, two fc layers"""
 
     def __init__(
