@@ -8,6 +8,7 @@ DBRHD dataset
 
 - CNN
 - KNN
-- Naive net
+- DNN(numpy)
+- DNN(sklearn)
 
 ## Result

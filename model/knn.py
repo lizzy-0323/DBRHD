@@ -76,6 +76,7 @@ class KNN(object):
         :param test_data: the test data
         :param test_label: the test label
         :param k: the number of nearest neighbors
+        :return ACC and the number of wrong answers
         """
         # 将验证集和训练集合并
         count = 0
@@ -84,4 +85,4 @@ class KNN(object):
         for data, label in zip(test_data, test_label):
             if self.classify(data, k) == label:
                 count += 1
-        return count / len(test_label)
+        return count / len(test_label), len(test_label) - count
