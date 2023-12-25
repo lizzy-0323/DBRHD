@@ -1,4 +1,4 @@
-DBRHD handwritten digit recognition
+# DBRHD handwritten digit recognition
 
 ## Dataset
 
