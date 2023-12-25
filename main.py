@@ -1,7 +1,7 @@
 # coding: utf-8
 """
 @author: laziyu
-@date: 2023/11/13
+@date: 2023/12/25
 @desc: using multiple method to recognize the handwritten digits
 """
 import os
@@ -12,6 +12,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import pandas as pd
+import argparse
 from matplotlib import pyplot as plt
 from sklearn.neural_network import MLPClassifier as DNN
 from sklearn.model_selection import train_test_split as TLS
@@ -77,12 +78,11 @@ def plot(filename, model="knn"):
     plt.savefig(f"./result/{model}.png")
 
 
-def benchmark(methods=None):
+def benchmark():
     """
     run mutiple algorithm and compare the result and time
     """
-    if methods is None:
-        methods = ["knn", "net", "net_naive", "cnn"]
+    methods = ["knn", "net", "net_naive", "cnn"]
     for method in methods:
         start_time = time.time()
         if method == "knn":
@@ -275,7 +275,58 @@ def run(method=None, save=True, params=None, param_type="k"):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(
+        dest="mode", help="the mode to run the program", required=True
+    )
+    parser_a = subparsers.add_parser("run", help="run the program")
+    parser_a.add_argument(
+        "--method",
+        type=str,
+        default="knn",
+        help="the method to recognize the handwritten digits",
+        required=True,
+    )
+    parser_a.add_argument(
+        "--save",
+        type=bool,
+        default=True,
+        help="whether to save the result",
+    )
+    parser_a.add_argument(
+        "--params",
+        nargs="+",
+        default=None,
+        help="the parameters of the methods",
+        required=True,
+    )
+    parser_a.add_argument(
+        "--param_type",
+        type=str,
+        default="k",
+        help="the type of the parameters",
+    )
+    parser_b = subparsers.add_parser("benchmark", help="run benchmark")
+    parser_c = subparsers.add_parser("plot", help="plot the result")
+    parser_c.add_argument(
+        "--filename",
+        type=str,
+        default=None,
+        help="the filename to plot",
+        required=True,
+    )
+    args = parser.parse_args()
+    print(args)
+    if args.mode == "run":
+        run(args.method, args.save, [int(param) for param in args.params])
+    elif args.mode == "benchmark":
+        benchmark()
+    elif args.mode == "plot":
+        plot(args.filename)
+    else:
+        raise ValueError("mode not found!")
     # run("net", save=True, params=[0.1, 0.01, 0.001, 0.0001], param_type="lr")
+    # run("knn", save=True, params=[1, 3, 5, 7], param_type="k")
     # run("net_naive", save=True, params=[500, 1000, 1500, 2000], param_type="hidden_num")
     # plot("./result/cnn.csv", model="cnn")
-    benchmark(["knn", "net", "net_naive", "cnn"])
+    # benchmark(["knn", "net", "net_naive", "cnn"])
