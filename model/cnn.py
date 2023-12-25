@@ -36,7 +36,6 @@ class CNN(nn.Module):
     """
     CNN model
     """
-
     def __init__(self) -> None:
         super().__init__()
         # 第一个卷积层
